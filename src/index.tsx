@@ -1,24 +1,20 @@
-import React, { MutableRefObject, useCallback, useRef } from "react";
+import React, { MutableRefObject, useCallback, useMemo, useRef } from "react";
 import { Rnd, Props as RndProps, RndDragCallback, RndResizeCallback, RndResizeStartCallback } from 'react-rnd';
 import styled from 'styled-components'
 
-export const style = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  border: "solid 1px #ddd",
-  background: "#f0f0f0"
-};
+const DRAGGING_CLASS = 'react-draggable-dragging'
+const RESIZING_CLASS = 'react-rnd-resizing'
+const MASK_CLASS = 'react-rnd-mask'
 
 export const grid = (num: number) => Math.round(Number(num) / 50) * 50;
 
 export type Props = RndProps
 
-const useGridRnd = (shadowRef: MutableRefObject<HTMLDivElement>, props: Props) => {
+const useGridRnd = (maskRef: MutableRefObject<HTMLDivElement>, props: Props) => {
   const onDrag = useCallback<RndDragCallback>(
     (...args) => {
       const data = args[1];
-      const { current: shadow } = shadowRef;
+      const { current: shadow } = maskRef;
       if (shadow) {
         const diffX = data.x - grid(data.lastX);
         const diffY = data.y - grid(data.lastY);
@@ -28,12 +24,12 @@ const useGridRnd = (shadowRef: MutableRefObject<HTMLDivElement>, props: Props) =
         props.onDrag(...args);
       }
     },
-    [shadowRef, props]
+    [maskRef, props]
   );
 
   const onDragStop = useCallback<RndDragCallback>(
     (_e, data) => {
-      const { current: shadow } = shadowRef;
+      const { current: shadow } = maskRef;
       if (shadow) {
         shadow.style.transform = "";
       }
@@ -49,12 +45,12 @@ const useGridRnd = (shadowRef: MutableRefObject<HTMLDivElement>, props: Props) =
         );
       }
     },
-    [shadowRef, props]
+    [maskRef, props]
   );
 
   const onResizeStart = useCallback<RndResizeStartCallback>(
     (...args) => {
-      args[2].className += " resizing";
+      args[2].classList.add(RESIZING_CLASS)
 
       if (props.onResizeStart) {
         props.onResizeStart(...args);
@@ -67,7 +63,7 @@ const useGridRnd = (shadowRef: MutableRefObject<HTMLDivElement>, props: Props) =
     (...args) => {
       const [, , ref] = args
       const { height, width } = ref.getBoundingClientRect()
-      const { current: shadow } = shadowRef;
+      const { current: shadow } = maskRef;
       if (shadow) {
         shadow.style.height = `${grid(height)}px`;
         shadow.style.width = `${grid(width)}px`;
@@ -77,16 +73,15 @@ const useGridRnd = (shadowRef: MutableRefObject<HTMLDivElement>, props: Props) =
         props.onResize(...args);
       }
     },
-    [shadowRef, props]
+    [maskRef, props]
   );
 
   const onResizeStop = useCallback<RndResizeCallback>(
     (...args) => {
       const [, , ref] = args
-      const { height, width } = ref.getBoundingClientRect()
+      ref.classList.remove(RESIZING_CLASS)
 
-      const clsName = ref.className;
-      ref.className = clsName.replace(" resizing", "");
+      const { height, width } = ref.getBoundingClientRect()
       ref.style.width = `${grid(width)}px`
       ref.style.height = `${grid(height)}px`
 
@@ -97,29 +92,26 @@ const useGridRnd = (shadowRef: MutableRefObject<HTMLDivElement>, props: Props) =
     [props]
   );
 
-  return {
+  return useMemo(() => ({
     onDrag,
     onDragStop,
     onResizeStart,
     onResize,
     onResizeStop
-  };
+  }), [onDrag, onDragStop, onResizeStart, onResize, onResizeStop]);
 };
 
 const StyledRnd = styled(Rnd)`
-  &.react-draggable-dragging,
-  &.resizing {
-    position: relative;
-  }
+  position: relative;
 
-  .shadow {
+  .${MASK_CLASS} {
     display: none;
   }
 
-  &.react-draggable-dragging, &.resizing {
-    .shadow {
+  &.${DRAGGING_CLASS}, &.${RESIZING_CLASS} {
+    .${MASK_CLASS} {
       content: "";
-      background-color: red;
+      background-color: black;
       position: absolute;
       display: block;
       opacity: 0.3;
@@ -132,20 +124,16 @@ const StyledRnd = styled(Rnd)`
 `
 
 export const GridRnd = (props: Props) => {
-  const { bounds, size, position, children } = props;
-  const shadowRef = useRef<HTMLDivElement>({} as HTMLDivElement);
-  const gridRndCallbacks = useGridRnd(shadowRef, props);
+  const { children, ...rest } = props;
+  const maskRef = useRef<HTMLDivElement>({} as HTMLDivElement);
+  const gridRndCallbacks = useGridRnd(maskRef, props);
 
   return (
     <StyledRnd
-      className="my-rnd"
-      bounds={bounds}
-      style={style}
-      size={size}
-      position={position}
+      {...rest}
       {...gridRndCallbacks}
     >
-      <div className="shadow" ref={shadowRef} />
+      <div className={MASK_CLASS} ref={maskRef} />
       {children}
     </StyledRnd>
   );

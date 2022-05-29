@@ -47,6 +47,16 @@ const BLOCKS = {
   },
 };
 
+const style = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: "solid 1px #ddd",
+  background: "#f0f0f0",
+  height: '100%',
+  width: '100%',
+};
+
 const Template: Story<Props> = () => {
   const [blocks, setBlocks] = useState(BLOCKS)
 
@@ -57,7 +67,7 @@ const Template: Story<Props> = () => {
       size: { width: block.width, height: block.height },
       position: { x: block.x, y: block.y },
       onDragStop: (_e, data) => {
-        setBlocks(org => ({ ...org, [name]: { ...data } }));
+        setBlocks(org => ({ ...org, [name]: { ...block, ...data } }));
       },
       onResizeStop: (_e, _d, ref) => {
         setBlocks(
@@ -75,16 +85,17 @@ const Template: Story<Props> = () => {
   };
 
   return (
-    <>
+    <div style={{ margin: '100px 50px', position: 'relative' }}>
       {Object.keys(blocks).map((name) => (
         <GridRnd
           key={name}
+          style={style}
           {...getProps(name)}
         >
           Rnd
         </GridRnd>
       ))}
-    </>
+    </div>
   );
 }
 
