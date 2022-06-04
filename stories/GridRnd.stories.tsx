@@ -12,48 +12,49 @@ const meta: Meta = {
 
 export default meta;
 
-
 const BLOCKS = {
   block1: {
     width: 200,
     height: 200,
     x: 0,
-    y: 0
+    y: 0,
   },
   block2: {
     width: 200,
     height: 200,
     x: 200,
-    y: 0
+    y: 0,
   },
   block3: {
     width: 200,
     height: 200,
     x: 0,
-    y: 200
+    y: 200,
   },
   block4: {
     width: 200,
     height: 200,
     x: 200,
-    y: 200
+    y: 200,
   },
 };
 
 const style = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  border: "solid 1px #ddd",
-  background: "#f0f0f0",
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: 'solid 1px #ddd',
+  background: '#f0f0f0',
   height: '100%',
   width: '100%',
 };
 
-const Template: Story<Props> = (props) => {
-  const [blocks, setBlocks] = useState(BLOCKS)
+const Template: Story<Props> = props => {
+  const [blocks, setBlocks] = useState(BLOCKS);
 
-  const getProps = (name): Pick<Props, 'size' | 'position' | 'onDragStop' | 'onResizeStop'> => {
+  const getProps = (
+    name
+  ): Pick<Props, 'size' | 'position' | 'onDragStop' | 'onResizeStop'> => {
     const block = blocks[name];
 
     return {
@@ -63,35 +64,29 @@ const Template: Story<Props> = (props) => {
         setBlocks(org => ({ ...org, [name]: { ...block, ...data } }));
       },
       onResizeStop: (_e, _d, ref, _delta, position) => {
-        setBlocks(
-          org => ({
-            ...org,
-            [name]: {
-              ...block,
-              ...position,
-              width: ref.getBoundingClientRect().width,
-              height: ref.getBoundingClientRect().height,
-            }
-          })
-        );
-      }
+        setBlocks(org => ({
+          ...org,
+          [name]: {
+            ...block,
+            ...position,
+            width: ref.getBoundingClientRect().width,
+            height: ref.getBoundingClientRect().height,
+          },
+        }));
+      },
     };
   };
 
   return (
     <div style={{ margin: '100px 50px', position: 'relative' }}>
-      {Object.keys(blocks).map((name) => (
-        <GridRnd
-          key={name}
-          {...props}
-          {...getProps(name)}
-        >
+      {Object.keys(blocks).map(name => (
+        <GridRnd key={name} {...props} {...getProps(name)}>
           <div style={{ ...style }}>Rnd</div>
         </GridRnd>
       ))}
     </div>
   );
-}
+};
 
 // By passing using the Args format for exported stories, you can control the props for a component for reuse in a test
 // https://storybook.js.org/docs/react/workflows/unit-testing
