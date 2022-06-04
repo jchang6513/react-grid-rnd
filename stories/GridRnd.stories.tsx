@@ -5,13 +5,6 @@ import { GridRnd, Props } from '../src';
 const meta: Meta = {
   title: 'GridRnd',
   component: GridRnd,
-  argTypes: {
-    children: {
-      control: {
-        type: 'text',
-      },
-    },
-  },
   parameters: {
     controls: { expanded: true },
   },
@@ -57,7 +50,7 @@ const style = {
   width: '100%',
 };
 
-const Template: Story<Props> = () => {
+const Template: Story<Props> = (props) => {
   const [blocks, setBlocks] = useState(BLOCKS)
 
   const getProps = (name): Pick<Props, 'size' | 'position' | 'onDragStop' | 'onResizeStop'> => {
@@ -69,14 +62,15 @@ const Template: Story<Props> = () => {
       onDragStop: (_e, data) => {
         setBlocks(org => ({ ...org, [name]: { ...block, ...data } }));
       },
-      onResizeStop: (_e, _d, ref) => {
+      onResizeStop: (_e, _d, ref, _delta, position) => {
         setBlocks(
           org => ({
             ...org,
             [name]: {
               ...block,
+              ...position,
               width: ref.getBoundingClientRect().width,
-              height: ref.getBoundingClientRect().height
+              height: ref.getBoundingClientRect().height,
             }
           })
         );
@@ -89,10 +83,10 @@ const Template: Story<Props> = () => {
       {Object.keys(blocks).map((name) => (
         <GridRnd
           key={name}
-          style={style}
+          {...props}
           {...getProps(name)}
         >
-          Rnd
+          <div style={{ ...style }}>Rnd</div>
         </GridRnd>
       ))}
     </div>

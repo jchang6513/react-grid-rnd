@@ -6,11 +6,12 @@ const DRAGGING_CLASS = 'react-draggable-dragging'
 const RESIZING_CLASS = 'react-rnd-resizing'
 const MASK_CLASS = 'react-rnd-mask'
 
-export const grid = (num: number) => Math.round(Number(num) / 50) * 50;
-
-export type Props = RndProps
+export type Props = RndProps & { gridSize?: number, maskStyle?: string }
 
 const useGridRnd = (maskRef: MutableRefObject<HTMLDivElement>, props: Props) => {
+  const { gridSize = 50 } = props;
+  const grid = useCallback((num: number) => Math.round(Number(num) / gridSize) * gridSize, [gridSize]);
+
   const onDrag = useCallback<RndDragCallback>(
     (...args) => {
       const data = args[1];
@@ -84,7 +85,7 @@ const useGridRnd = (maskRef: MutableRefObject<HTMLDivElement>, props: Props) => 
       const { height, width } = ref.getBoundingClientRect()
       ref.style.width = `${grid(width)}px`
       ref.style.height = `${grid(height)}px`
-
+      args[3] = { width: grid(args[3].width), height: grid(args[3].height)}
       if (props.onResizeStop) {
         props.onResizeStop(...args);
       }
@@ -119,22 +120,31 @@ const StyledRnd = styled(Rnd)`
       left: 0px;
       height: 100%;
       width: 100%;
+      ${props => props.maskStyle}
     }
   }
 `
 
+const CUSTOM_STYLE = { zIndex: 10, height: '100%', width: '100%' }
+
 export const GridRnd = (props: Props) => {
-  const { children, ...rest } = props;
+  const { children, maskStyle = '', style: customStyle, ...rest } = props;
   const maskRef = useRef<HTMLDivElement>({} as HTMLDivElement);
   const gridRndCallbacks = useGridRnd(maskRef, props);
+  const style = useMemo(() => ({
+    display: 'flex',
+    ...customStyle,
+  }), [customStyle])
 
   return (
     <StyledRnd
+      maskStyle={maskStyle}
+      style={style}
       {...rest}
       {...gridRndCallbacks}
     >
       <div className={MASK_CLASS} ref={maskRef} />
-      {children}
+      <div className="content" style={CUSTOM_STYLE}>{children}</div>
     </StyledRnd>
   );
 };
